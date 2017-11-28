@@ -11,9 +11,8 @@ public:
     virtual void insert( T element, int key ) = 0;
     virtual void remove(int key) = 0;
     virtual T search(int key) = 0;
-    
-}
 
+};
 
 }
 #endif
