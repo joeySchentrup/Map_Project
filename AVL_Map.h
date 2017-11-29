@@ -1,19 +1,19 @@
-#ifdef AVL_MAP_H
+#ifndef AVL_MAP_H
 #define AVL_MAP_H
 
 #include "Map.h"
 
-namespace cop3503 {
+namespace cop3530 {
 
 template<typename T>
-class AVL_Map : public Map {
+class AVL_Map : public Map<T> {
 public:
     AVL_Map();
-    ~AVL_Map();
-    AVL_Map(AVL_Map<E>& AVL_Map); //copy constructor
-    AVL_Map(AVL_Map<E>&& AVL_Map); //move constructor
-    AVL_Map<E>& operator=(AVL_Map<E>& AVL_Map); // copy assignment operator
-    AVL_Map<E>& operator=(AVL_Map<E>&& AVL_Map); // move assignment
+    ~AVL_Map() override;
+    AVL_Map(AVL_Map<T>& AVL_Map); //copy constructor
+    AVL_Map(AVL_Map<T>&& AVL_Map); //move constructor
+    AVL_Map<T>& operator=(AVL_Map<T>& AVL_Map); // copy assignment operator
+    AVL_Map<T>& operator=(AVL_Map<T>&& AVL_Map); // move assignment
 
     void insert( T element, int key ) override;
     void remove(int key) override;
@@ -21,7 +21,7 @@ public:
 
 private:
     struct Node {
-        Node(T item, int item_key, Node* left_child, Node* right_child);
+        Node(T item, int item_key);
 
         int key;
         T element;
@@ -63,59 +63,88 @@ AVL_Map<T>::~AVL_Map() {
 };
 
 template<typename T>
-AVL_Map<T>::AVL_Map(AVL_Map<E>& AVL_Map) {
+AVL_Map<T>::AVL_Map(AVL_Map<T>& AVL_Map) {
 
 };
 
 template<typename T>
-AVL_Map<T>::AVL_Map(AVL_Map<E>&& AVL_Map) {
+AVL_Map<T>::AVL_Map(AVL_Map<T>&& AVL_Map) {
 
 };
 
 template<typename T>
-AVL_Map<E>& AVL_Map<T>::operator=(AVL_Map<E>& AVL_Map) {
+AVL_Map<T>& AVL_Map<T>::operator=(AVL_Map<T>& AVL_Map) {
     
 };
 
 template<typename T>
-AVL_Map<E>& AVL_Map<T>::operator=(AVL_Map<E>&& AVL_Map) {
+AVL_Map<T>& AVL_Map<T>::operator=(AVL_Map<T>&& AVL_Map) {
 
 };
 
 template<typename T>
 void AVL_Map<T>::insert( T element, int key ) {
+    Node* new_node = new Node(element, key);
+    if(root->key < key) {
 
+    } else {
+
+    }
 };
 
 template<typename T>
 void AVL_Map<T>::remove(int key) {
-
+    
 };
 
 template<typename T>
 T AVL_Map<T>::search(int key) {
+    Node* temp = root;
 
+    while(key != temp->key) {
+        if(!temp)
+            throw std::runtime_error("Item not in AVL_Map");
+    
+        if(temp->key < key)
+            temp = temp->left;
+        else
+            temp = temp->right;
+    }
+
+    return temp->element;
 };
 
 //private functions
 template<typename T>
-typename Node* AVL_Map<T>::ll_rotation(Node* root) {
+typename AVL_Map<T>::Node* AVL_Map<T>::ll_rotation(Node* root) {
+    Node* temp = root;
+    root = root->left;
+    temp->left = root->right;
+    root->right = temp;
 
+    return root;
 };
 
 template<typename T>
-typename Node* AVL_Map<T>::lr_rotation(Node* root) {
-
+typename AVL_Map<T>::Node* AVL_Map<T>::lr_rotation(Node* root) {
+    root = rr_rotation(root);
+    return ll_rotation(root);
 };
 
 template<typename T>
-typename Node* AVL_Map<T>::rl_rotation(Node* root) {
-
+typename AVL_Map<T>::Node* AVL_Map<T>::rl_rotation(Node* root) {
+    root = ll_rotation(root);
+    return rr_rotation(root);
 };
 
 template<typename T>
-typename Node* AVL_Map<T>::rr_rotation(Node* root) {
+typename AVL_Map<T>::Node* AVL_Map<T>::rr_rotation(Node* root) {
+    Node* temp = root;
+    root = root->right;
+    temp->right = root->left;
+    root->left = temp;
 
+    return root;
 };
 
 }
