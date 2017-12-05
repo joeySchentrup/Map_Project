@@ -2,6 +2,7 @@
 #define AVL_H
 
 #include "Map.h"
+#include "./imports/Stack.h"
 
 namespace cop3530 {
 
@@ -22,6 +23,8 @@ public:
 private:
     struct Node {
         Node(V item, K item_key);
+        ~Node();
+        Node(Node& n);
 
         K key;
         V element;
@@ -54,18 +57,35 @@ AVL<K,V,cf,ef>::Node::Node(V item, K item_key) {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+AVL<K,V,cf,ef>::Node::~Node() {
+    delete left;
+    delete right;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::AVL() {
     root = nullptr;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::~AVL() {
-
+    delete root;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::AVL(AVL<K,V,cf,ef>& AVL) {
+    Stack<Node>* stack = new Stack<Node>();
+    stack->push(AVL.root);
+    Node* temp = root = new Node(AVL.root);
 
+    while(!stack->isEmpty()) {
+        if(temp->left)
+            stack->push(temp->left);
+        if(temp->right)
+            stack->push(temp->right);
+        
+        
+    }
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>

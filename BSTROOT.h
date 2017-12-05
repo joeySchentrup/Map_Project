@@ -31,7 +31,7 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key;)
+    Node* do_remove(Node* root, K key);
 
 };
 

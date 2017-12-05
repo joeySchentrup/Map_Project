@@ -81,7 +81,30 @@ void BSTLEAF<K,V,cf,ef>::insert( V value, K key ) {
         return;
     }
     
-    
+    Node* temp = root;
+
+    while(true) {
+        
+        if(ef(root, key)) {
+            temp->element = value;
+            return;
+        } else if(cf(root, key)) {
+            if(temp->right) {
+                temp = temp->right;
+            } else {
+                temp->right = new Node(value, key);
+                return;
+            }
+        } else {
+            if(temp->left) {
+                temp = temp->left;
+            } else {  
+                temp->left = new Node(value, key);
+                return;
+            }
+        }
+    }
+
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -94,7 +117,23 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 V& BSTLEAF<K,V,cf,ef>::lookup(K key) {
+    if(!root) {
+        throw std::runtime_error("AVL: Item not in Map");
+    }
     
+    Node* temp = root;
+
+    while(!ef(key,temp->key)) {
+        if(!temp)
+            throw std::runtime_error("AVL: Item not in Map");
+    
+        if(cf(root->key,key))
+            temp = temp->left;
+        else
+            temp = temp->right;
+    }
+
+    return temp->element;
 };
 
 
