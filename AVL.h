@@ -36,7 +36,7 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key);
+    Node* find_next_biggest(Node* root, K key);
     Node* do_copy(Node* root);
     
     Node* ll_rotation(Node* root);
@@ -166,7 +166,7 @@ void AVL<K,V,cf,ef>::remove(K key) {
     if(!root) 
          throw std::runtime_error("AVL: Item not in Map!");
 
-    root = do_remove(root, key);
+    root = find_next_biggest(root, key);
 
     if(root->left_height - root->right_height > 1) {
         if(root->left->left_height - root->left->right_height > 0) root = ll_rotation(root);
@@ -229,7 +229,7 @@ typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::rr_rotation(Node* root) {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::do_remove(Node* root, K key) {
+typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::find_next_biggest(Node* root, K key) {
     if(!root) 
          throw std::runtime_error("AVL: Item not in Map!");
 

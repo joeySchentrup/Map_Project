@@ -33,7 +33,7 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key);
+    Node* find_next_biggest(Node* root);
     Node* do_copy(Node* root);
 
 };
@@ -69,7 +69,7 @@ BSTLEAF<K,V,cf,ef>::BSTLEAF() {
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTLEAF<K,V,cf,ef>::~BSTLEAF() {
-
+    delete root;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -145,7 +145,39 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
     if(!root) 
          throw std::runtime_error("BSTLEAF: Item not in Map!");
 
-    
+    Node* temp = root;
+    Node* temp_parent = root;
+
+    while(!ef(key,temp->key)) {
+        if(!temp)
+            throw std::runtime_error("BSTLEAF: Item not in Map");
+        
+        if(cf(temp->key,key)) {
+            temp_parent = temp;
+            temp = temp->right;
+        } else { 
+            temp_parent = temp;
+            temp = temp->left;
+        }
+    }
+
+    if(!temp->right && !temp->left) {
+        if(temp_parent != temp) {
+            if(cf(temp_parent->key, key)
+                temp_parent->right = nullptr;
+            else
+                temp_parent->left = nullptr;
+        } else {
+            root = nullptr;
+        }
+        delete temp;
+    } else {
+        Node* new_temp = find_next_biggest(temp)
+        temp->key = new_temp->key;
+        temp->value = new_temp->value;
+        new_temp->left = new_temp->right = nullptr;
+        delete new_temp;
+    }
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -169,12 +201,34 @@ V& BSTLEAF<K,V,cf,ef>::lookup(K key) {
     return temp->element;
 };
 
+//Private functions!!!!
+
+//This takes in the node to be deleted and finds the left most child of it's right child.
+//If there is not right child, it takes the right most child of the left child.
+//The Node that is returned to not the node intended to be deleted. What is returned is the 
+//Node hold the vaules which will replace the vaules of the node to be deleted.
+//The root node must have children otherwise this code would not be run. (Check remove function)
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTLEAF<K,V,cf,ef>::Node* BSTLEAF<K,V,cf,ef>::do_remove(Node* root, K key) {
+typename BSTLEAF<K,V,cf,ef>::Node* BSTLEAF<K,V,cf,ef>::find_next_biggest(Node* root) {
     if(!root) 
-         throw std::runtime_error("BSTLEAF: Item not in Map!");
+        return nullptr;
 
+    Node* temp = root->right;
+    Node* temp_parent = root;
 
+    if(!temp) {
+        temp = temp_parent->left;
+        temp_parent->left = temp_parent->left->left;
+        return temp;
+    }
+
+    while(temp->left) {
+        temp_parent = temp;
+        temp = temp->left;
+    }
+
+    temp_parent->left = temp->right;
+    return temp;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>

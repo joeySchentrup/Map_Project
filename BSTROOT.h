@@ -33,7 +33,7 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key);
+    Node* find_next_biggest(Node* root, K key);
     Node* do_copy(Node* root);
 
 };
@@ -120,8 +120,41 @@ void BSTROOT<K,V,cf,ef>::insert( V value, K key ) {
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 void BSTROOT<K,V,cf,ef>::remove(K key) {
     if(!root) 
-         throw std::runtime_error("BSTROOT: Item not in Map!");
+         throw std::runtime_error("BSTLEAF: Item not in Map!");
 
+    Node* temp = root;
+    Node* temp_parent = root;
+
+    while(!ef(key,temp->key)) {
+        if(!temp)
+            throw std::runtime_error("BSTLEAF: Item not in Map");
+        
+        if(cf(temp->key,key)) {
+            temp_parent = temp;
+            temp = temp->right;
+        } else { 
+            temp_parent = temp;
+            temp = temp->left;
+        }
+    }
+
+    if(!temp->right && !temp->left) {
+        if(temp_parent != temp) {
+            if(cf(temp_parent->key, key)
+                temp_parent->right = nullptr;
+            else
+                temp_parent->left = nullptr;
+        } else {
+            root = nullptr;
+        }
+        delete temp;
+    } else {
+        Node* new_temp = find_next_biggest(temp)
+        temp->key = new_temp->key;
+        temp->value = new_temp->value;
+        new_temp->left = new_temp->right = nullptr;
+        delete new_temp;
+    }
     
 };
 
@@ -147,11 +180,26 @@ V& BSTROOT<K,V,cf,ef>::lookup(K key) {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::do_remove(Node* root, K key) {
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::find_next_biggest(Node* root, K key) {
     if(!root) 
-         throw std::runtime_error("BSTROOT: Item not in Map!");
+        return nullptr;
 
+    Node* temp = root->right;
+    Node* temp_parent = root;
 
+    if(!temp) {
+        temp = temp_parent->left;
+        temp_parent->left = temp_parent->left->left;
+        return temp;
+    }
+
+    while(temp->left) {
+        temp_parent = temp;
+        temp = temp->left;
+    }
+
+    temp_parent->left = temp->right;
+    return temp;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
