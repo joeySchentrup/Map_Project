@@ -36,7 +36,8 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key;)
+    Node* do_remove(Node* root, K key);
+    Node* do_copy(Node* root);
     
     Node* ll_rotation(Node* root);
     Node* lr_rotation(Node* root);
@@ -63,6 +64,17 @@ AVL<K,V,cf,ef>::Node::~Node() {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+AVL<K,V,cf,ef>::Node::Node(Node& n) {
+    key = n.key;
+    element = n.element;
+        
+    left = n.left;
+    left_height = n.left_height;
+    right = n.right;
+    right_height = n.right_height;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::AVL() {
     root = nullptr;
 };
@@ -74,33 +86,39 @@ AVL<K,V,cf,ef>::~AVL() {
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::AVL(AVL<K,V,cf,ef>& AVL) {
-    Stack<Node>* stack = new Stack<Node>();
-    stack->push(AVL.root);
-    Node* temp = root = new Node(AVL.root);
+    
+    root = new Node(AVL.root);
 
-    while(!stack->isEmpty()) {
-        if(temp->left)
-            stack->push(temp->left);
-        if(temp->right)
-            stack->push(temp->right);
-        
-        
+    if(root) {
+        root->left = do_copy(AVL.root->left);
+        root->right = do_copy(AVL.root->right); 
     }
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>::AVL(AVL<K,V,cf,ef>&& AVL) {
-
+    root = AVL.root;
+    AVL.root = nullptr;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>& AVL<K,V,cf,ef>::operator=(AVL<K,V,cf,ef>& AVL) {
+    root = Node(AVL.root);
     
+    if(AVL.root) {
+        root->left = do_copy(AVL.root->left);
+        root->right = do_copy(AVL.root->right); 
+    }
+
+    return *this;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 AVL<K,V,cf,ef>& AVL<K,V,cf,ef>::operator=(AVL<K,V,cf,ef>&& AVL) {
-
+    
+    root = AVL.root;
+    AVL.root = nullptr;
+    return *this;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -211,56 +229,9 @@ typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::rr_rotation(Node* root) {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-void AVL<K,V,cf,ef>::do_remove(K key) {
+typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::do_remove(Node* root, K key) {
     if(!root) 
          throw std::runtime_error("AVL: Item not in Map!");
-
-    Node* temp = root;
-    Node* temp_parent = root;
-    while(true) {
-        if(cf(temp->key,key)) {
-            if(!temp->left) 
-                throw std::runtime_error("AVL: Item not in Map!");
-
-            temp_parent = temp;
-            temp->left_height -= 1;
-            temp = temp->left;
-        } else if(ef(temp->key, key)) {
-            if(!temp->left && !temp->right) {
-                if(temp == temp_parent->right)
-                    temp_parent->right = nullptr;
-                else
-                    temp_parent->left = nullptr;
-
-                delete temp;
-            } else if(!temp->left) {
-                if(temp == temp_parent->right)
-                    temp_parent->right = temp->right;
-                else
-                    temp_parent->left = temp->right;
-                
-                delete temp
-            } else if(!temp->right) {
-                if(temp == temp_parent->right)
-                    temp_parent->right = temp->left;
-                else
-                    temp_parent->left = temp->left;
-                
-                delete temp
-            } else {
-                while(temp) {
-                   
-                }
-            }
-        } else {
-            if(!temp->right) 
-                throw std::runtime_error("AVL: Item not in Map!");
-
-            temp_parent = temp;
-            temp->right_height -= 1;
-            temp = temp->right;
-        }
-    }
 
     if(root->left_height - root->right_height > 1) {
         if(root->left->left_height - root->left->right_height > 0) root = ll_rotation(root);
@@ -270,6 +241,18 @@ void AVL<K,V,cf,ef>::do_remove(K key) {
         if(root->right->left_height - root->right->right_height < 0) root = rr_rotation(root);
         else root = rl_rotation(root);
     }
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename AVL<K,V,cf,ef>::Node* AVL<K,V,cf,ef>::do_copy(Node* root) {
+    if(!root)
+        return nullptr;
+    
+    Node* new_node = Node(root);
+    new_node->left = do_copy(root->left);
+    new_node->right = do_copy(root->right);
+
+    return new_node;
 };
 
 }

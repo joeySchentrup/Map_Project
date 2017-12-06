@@ -23,6 +23,8 @@ public:
 private:
     struct Node {
         Node(V item, K item_key);
+        ~Node();
+        Node(Node& n);
 
         K key;
         V element;
@@ -32,7 +34,10 @@ private:
     };
 
     Node* root;
-    Node* do_remove(Node* root, K key;);
+
+    Node* do_remove(Node* root, K key);
+    Node* do_copy(Node* root);
+
     void insert_leaf(V element, K key);
     void insert_root(V element, K key);
     int num_nodes;
@@ -43,40 +48,70 @@ template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>::Node::Node(V item, K item_key) {
     key = item_key;
     element = item;
-    num_nodes = 0;
         
     left = nullptr;
     right = nullptr;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+BSTRAND<K,V,cf,ef>::Node::~Node() {
+    delete right;
+    delete left;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+BSTRAND<K,V,cf,ef>::Node::Node(Node& n) {
+    key = n.key;
+    element = n.element;
+        
+    left = n.left;
+    right = n.right;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>::BSTRAND() {
     root = nullptr;
+    num_nodes = 0;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>::~BSTRAND() {
-
+    delete root;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>::BSTRAND(BSTRAND<K,V,cf,ef>& BSTRAND) {
+    root = new Node(BSTRAND.root);
 
+    if(root) {
+        root->left = do_copy(BSTRAND.root->left);
+        root->right = do_copy(BSTRAND.root->right); 
+    }
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>::BSTRAND(BSTRAND<K,V,cf,ef>&& BSTRAND) {
-
+    root = BSTRAND.root;
+    BSTRAND.root = nullptr;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>& BSTRAND<K,V,cf,ef>::operator=(BSTRAND<K,V,cf,ef>& BSTRAND) {
+    root = Node(BSTRAND.root);
     
+    if(BSTRAND.root) {
+        root->left = do_copy(BSTRAND.root->left);
+        root->right = do_copy(BSTRAND.root->right); 
+    }
+
+    return *this;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 BSTRAND<K,V,cf,ef>& BSTRAND<K,V,cf,ef>::operator=(BSTRAND<K,V,cf,ef>&& BSTRAND) {
-
+    root = BSTRAND.root;
+    BSTRAND.root = nullptr;
+    return *this;
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -105,23 +140,37 @@ void BSTRAND<K,V,cf,ef>::remove(K key) {
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 V& BSTRAND<K,V,cf,ef>::lookup(K key) {
+    if(!root) {
+        throw std::runtime_error("BSTLEAF: Item not in Map");
+    }
     
+    Node* temp = root;
+
+    while(!ef(key,temp->key)) {
+        if(!temp)
+            throw std::runtime_error("BSTLEAF: Item not in Map");
+    
+        if(cf(root->key,key))
+            temp = temp->left;
+        else
+            temp = temp->right;
+    }
+
+    return temp->element;
 };
 
 
-}
-
 //private functions
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-void BSTRAND<K,V,cf,ef>::insert_leaf(V element, K key) {
+void BSTRAND<K,V,cf,ef>::insert_leaf(V value, K key) {
     Node* temp = root;
 
     while(true) {
         
-        if(ef(root, key)) {
+        if(ef(root->key, key)) {
             temp->element = value;
             return;
-        } else if(cf(root, key)) {
+        } else if(cf(root->key, key)) {
             if(temp->right) {
                 temp = temp->right;
             } else {
@@ -144,6 +193,25 @@ void BSTRAND<K,V,cf,ef>::insert_root(V element, K key) {
     
 };
 
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::do_remove(Node* root, K key) {
+    if(!root) 
+         throw std::runtime_error("BSTRAND: Item not in Map!");
+
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::do_copy(Node* root) {
+    if(!root)
+        return nullptr;
+    
+    Node* new_node = Node(root);
+    new_node->left = do_copy(root->left);
+    new_node->right = do_copy(root->right);
+
+    return new_node;
+};
 
 
+}
 #endif
