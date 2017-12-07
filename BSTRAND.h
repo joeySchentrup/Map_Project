@@ -39,8 +39,11 @@ private:
     Node* do_copy(Node* root);
 
     void insert_leaf(V element, K key);
-    void insert_root(V element, K key);
+    Node* insert_root(Node* n, V element, K key);
     int num_nodes;
+
+    Node* r_rotation(Node* root);
+    Node* l_rotation(Node* root);
 
 };
 
@@ -126,7 +129,7 @@ void BSTRAND<K,V,cf,ef>::insert( V value, K key ) {
     if(rand() > RAND_MAX/num_nodes)
         insert_leaf(value, key);
     else
-        insert_root(value, key);
+        insert_root(root, value, key);
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -221,8 +224,16 @@ void BSTRAND<K,V,cf,ef>::insert_leaf(V value, K key) {
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-void BSTRAND<K,V,cf,ef>::insert_root(V element, K key) {
-    
+void BSTRAND<K,V,cf,ef>::insert_root(Node* root, V element, K key) {
+    if(!root) {
+        root = new Node(value, key);
+    } else if(cf(key, root->key)) {
+        insert_at_root(root->left, value, key);
+        root = r_rotation(root);
+    } else {
+        insert_at_root(root->right, value, key);
+        root = l_rotation(root);
+    }
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -258,6 +269,22 @@ typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::do_copy(Node* root) {
     new_node->right = do_copy(root->right);
 
     return new_node;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::l_rotation(Node* root) {
+    Node* temp = root->right;
+    root->right = temp->left;
+    temp->left = root;
+    return temp;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::r_rotation(Node* root) {
+    Node* temp = root->left;
+    root->left = temp->right;
+    temp->right = root;
+    return temp;
 };
 
 

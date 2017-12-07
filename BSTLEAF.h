@@ -155,7 +155,7 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
         if(cf(temp->key,key)) {
             temp_parent = temp;
             temp = temp->right;
-        } else { 
+        } else {
             temp_parent = temp;
             temp = temp->left;
         }

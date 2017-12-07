@@ -35,6 +35,9 @@ private:
     Node* root;
     Node* find_next_biggest(Node* root, K key);
     Node* do_copy(Node* root);
+    Node* insert_at_root(Node* root, V value, K key);
+    Node* r_rotation(Node* root);
+    Node* l_rotation(Node* root);
 
 };
 
@@ -109,12 +112,7 @@ BSTROOT<K,V,cf,ef>& BSTROOT<K,V,cf,ef>::operator=(BSTROOT<K,V,cf,ef>&& BSTROOT) 
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 void BSTROOT<K,V,cf,ef>::insert( V value, K key ) {
-    if(!root) {
-        root = new Node(value, key);
-        return;
-    }
-    
-    
+    root = insert_at_root(root, value, key);
 };
 
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
@@ -179,6 +177,8 @@ V& BSTROOT<K,V,cf,ef>::lookup(K key) {
     return temp->element;
 };
 
+//private functions
+
 template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
 typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::find_next_biggest(Node* root, K key) {
     if(!root) 
@@ -212,6 +212,35 @@ typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::do_copy(Node* root) {
     new_node->right = do_copy(root->right);
 
     return new_node;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::insert_at_root(Node* root, V value,K key) {
+    if(!root) {
+        root = new Node(value, key);
+    } else if(cf(key, root->key)) {
+        insert_at_root(root->left, value, key);
+        root = r_rotation(root);
+    } else {
+        insert_at_root(root->right, value, key);
+        root = l_rotation(root);
+    }
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::l_rotation(Node* root) {
+    Node* temp = root->right;
+    root->right = temp->left;
+    temp->left = root;
+    return temp;
+};
+
+template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::r_rotation(Node* root) {
+    Node* temp = root->left;
+    root->left = temp->right;
+    temp->right = root;
+    return temp;
 };
 
 
