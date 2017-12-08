@@ -3,10 +3,11 @@
 
 #include "Map.h"
 #include <cstdlib>
+#include <string>
 
 namespace cop3530 {
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 class BSTRAND : public Map<K,V,cf,ef> {
 public:
     BSTRAND();
@@ -16,7 +17,7 @@ public:
     BSTRAND<K,V,cf,ef>& operator=(BSTRAND<K,V,cf,ef>& BSTRAND); // copy assignment operator
     BSTRAND<K,V,cf,ef>& operator=(BSTRAND<K,V,cf,ef>&& BSTRAND); // move assignment
 
-    void insert( V element, K key ) override;
+    void insert( V value, K key ) override;
     void remove(K key) override;
     V& lookup(K key) override;
 
@@ -27,7 +28,7 @@ private:
         Node(Node& n);
 
         K key;
-        V element;
+        V value;
         
         Node* left;
         Node* right;
@@ -35,54 +36,53 @@ private:
 
     Node* root;
 
-    Node* find_next_biggest(Node* root, K key);
-    Node* do_copy(Node* root);
+    Node* find_next_biggest(Node* n);
+    Node* do_copy(Node* n);
 
-    void insert_leaf(V element, K key);
-    Node* insert_root(Node* n, V element, K key);
+    void insert_at_leaf(V value, K key);
+    Node* insert_at_root(Node* n, V value, K key);
     int num_nodes;
 
-    Node* r_rotation(Node* root);
-    Node* l_rotation(Node* root);
-
+    Node* r_rotation(Node* n);
+    Node* l_rotation(Node* n);
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::Node::Node(V item, K item_key) {
     key = item_key;
-    element = item;
+    value = item;
         
     left = nullptr;
     right = nullptr;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::Node::~Node() {
     delete right;
     delete left;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::Node::Node(Node& n) {
     key = n.key;
-    element = n.element;
+    value = n.value;
         
     left = n.left;
     right = n.right;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::BSTRAND() {
     root = nullptr;
     num_nodes = 0;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::~BSTRAND() {
     delete root;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::BSTRAND(BSTRAND<K,V,cf,ef>& BSTRAND) {
     root = new Node(BSTRAND.root);
 
@@ -92,13 +92,13 @@ BSTRAND<K,V,cf,ef>::BSTRAND(BSTRAND<K,V,cf,ef>& BSTRAND) {
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>::BSTRAND(BSTRAND<K,V,cf,ef>&& BSTRAND) {
     root = BSTRAND.root;
     BSTRAND.root = nullptr;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>& BSTRAND<K,V,cf,ef>::operator=(BSTRAND<K,V,cf,ef>& BSTRAND) {
     root = Node(BSTRAND.root);
     
@@ -110,40 +110,36 @@ BSTRAND<K,V,cf,ef>& BSTRAND<K,V,cf,ef>::operator=(BSTRAND<K,V,cf,ef>& BSTRAND) {
     return *this;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTRAND<K,V,cf,ef>& BSTRAND<K,V,cf,ef>::operator=(BSTRAND<K,V,cf,ef>&& BSTRAND) {
     root = BSTRAND.root;
     BSTRAND.root = nullptr;
     return *this;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 void BSTRAND<K,V,cf,ef>::insert( V value, K key ) {
     ++num_nodes;
-    if(!root) {
-        root = new Node(value, key);
-        return;
-    }
-    srand (time(NULL));
+    //srand (time(NULL));
     
     if(rand() > RAND_MAX/num_nodes)
-        insert_leaf(value, key);
+        insert_at_leaf(value, key);
     else
-        insert_root(root, value, key);
+        root = insert_at_root(root, value, key);
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 void BSTRAND<K,V,cf,ef>::remove(K key) {
     --num_nodes;
     if(!root) 
-         throw std::runtime_error("BSTLEAF: Item not in Map!");
+         throw std::runtime_error("BSTRAND: Item not in Map!");
 
     Node* temp = root;
     Node* temp_parent = root;
 
     while(!ef(key,temp->key)) {
         if(!temp)
-            throw std::runtime_error("BSTLEAF: Item not in Map");
+            throw std::runtime_error("BSTRAND: Item not in Map");
         
         if(cf(temp->key,key)) {
             temp_parent = temp;
@@ -156,7 +152,7 @@ void BSTRAND<K,V,cf,ef>::remove(K key) {
 
     if(!temp->right && !temp->left) {
         if(temp_parent != temp) {
-            if(cf(temp_parent->key, key)
+            if(cf(temp_parent->key, key))
                 temp_parent->right = nullptr;
             else
                 temp_parent->left = nullptr;
@@ -165,7 +161,7 @@ void BSTRAND<K,V,cf,ef>::remove(K key) {
         }
         delete temp;
     } else {
-        Node* new_temp = find_next_biggest(temp)
+        Node* new_temp = find_next_biggest(temp);
         temp->key = new_temp->key;
         temp->value = new_temp->value;
         new_temp->left = new_temp->right = nullptr;
@@ -173,39 +169,43 @@ void BSTRAND<K,V,cf,ef>::remove(K key) {
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 V& BSTRAND<K,V,cf,ef>::lookup(K key) {
     if(!root) {
-        throw std::runtime_error("BSTLEAF: Item not in Map");
+        throw std::runtime_error("BSTRAND: Item not in Map. Root DNE!");
     }
     
     Node* temp = root;
 
     while(!ef(key,temp->key)) {
-        if(!temp)
-            throw std::runtime_error("BSTLEAF: Item not in Map");
-    
-        if(cf(root->key,key))
-            temp = temp->left;
-        else
+        if(cf(temp->key,key))
             temp = temp->right;
+        else
+            temp = temp->left;
+
+        if(!temp)
+            throw std::runtime_error("BSTRAND: Item not in Map. Cannot lookup!");
     }
 
-    return temp->element;
+    return temp->value;
 };
 
 
 //private functions
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-void BSTRAND<K,V,cf,ef>::insert_leaf(V value, K key) {
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+void BSTRAND<K,V,cf,ef>::insert_at_leaf(V value, K key) {
+    if(!root) {
+        root = new Node(value, key);
+        return;
+    }
+    
     Node* temp = root;
 
     while(true) {
-        
-        if(ef(root->key, key)) {
-            temp->element = value;
+        if(ef(temp->key, key)) {
+            temp->value = value;
             return;
-        } else if(cf(root->key, key)) {
+        } else if(cf(temp->key, key)) {
             if(temp->right) {
                 temp = temp->right;
             } else {
@@ -223,26 +223,26 @@ void BSTRAND<K,V,cf,ef>::insert_leaf(V value, K key) {
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-void BSTRAND<K,V,cf,ef>::insert_root(Node* root, V element, K key) {
-    if(!root) {
-        root = new Node(value, key);
-    } else if(cf(key, root->key)) {
-        insert_at_root(root->left, value, key);
-        root = r_rotation(root);
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::insert_at_root(Node* n, V value, K key) {
+    if(!n) {
+        return new Node(value, key);
+    } else if(cf(key, n->key)) {
+        n->left = insert_at_root(n->left, value, key);
+        return r_rotation(n);
     } else {
-        insert_at_root(root->right, value, key);
-        root = l_rotation(root);
+        n->right = insert_at_root(n->right, value, key);
+        return l_rotation(n);
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::find_next_biggest(Node* root, K key) {
-    if(!root) 
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::find_next_biggest(Node* n) {
+    if(!n) 
         return nullptr;
 
-    Node* temp = root->right;
-    Node* temp_parent = root;
+    Node* temp = n->right;
+    Node* temp_parent = n;
 
     if(!temp) {
         temp = temp_parent->left;
@@ -259,34 +259,33 @@ typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::find_next_biggest(Node* r
     return temp;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::do_copy(Node* root) {
-    if(!root)
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::do_copy(Node* n) {
+    if(!n)
         return nullptr;
     
-    Node* new_node = Node(root);
-    new_node->left = do_copy(root->left);
-    new_node->right = do_copy(root->right);
+    Node* new_node = Node(n);
+    new_node->left = do_copy(n->left);
+    new_node->right = do_copy(n->right);
 
     return new_node;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::l_rotation(Node* root) {
-    Node* temp = root->right;
-    root->right = temp->left;
-    temp->left = root;
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::l_rotation(Node* n) {
+    Node* temp = n->right;
+    n->right = temp->left;
+    temp->left = n;
     return temp;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
-typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::r_rotation(Node* root) {
-    Node* temp = root->left;
-    root->left = temp->right;
-    temp->right = root;
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTRAND<K,V,cf,ef>::Node* BSTRAND<K,V,cf,ef>::r_rotation(Node* n) {
+    Node* temp = n->left;
+    n->left = temp->right;
+    temp->right = n;
     return temp;
 };
-
 
 }
 #endif

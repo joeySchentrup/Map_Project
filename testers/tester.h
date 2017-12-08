@@ -2,6 +2,7 @@
 #define TESTER_H
 
 #include "catch.hpp"
+#include <cstdlib>
 
 #include "../AVL.h"
 #include "../BSTROOT.h"

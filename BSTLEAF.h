@@ -5,7 +5,7 @@
 
 namespace cop3530 {
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 class BSTLEAF : public Map<K,V,cf,ef> {
 public:
     BSTLEAF();
@@ -15,7 +15,7 @@ public:
     BSTLEAF<K,V,cf,ef>& operator=(BSTLEAF<K,V,cf,ef>& BSTLEAF); // copy assignment operator
     BSTLEAF<K,V,cf,ef>& operator=(BSTLEAF<K,V,cf,ef>&& BSTLEAF); // move assignment
 
-    void insert( V element, K key ) override;
+    void insert( V value, K key ) override;
     void remove(K key) override;
     V& lookup(K key) override;
 
@@ -26,7 +26,7 @@ private:
         Node(Node& n);
 
         K key;
-        V element;
+        V value;
         
         Node* left;
         Node* right;
@@ -38,41 +38,41 @@ private:
 
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::Node::Node(V item, K item_key) {
     key = item_key;
-    element = item;
+    value = item;
         
     left = nullptr;
     right = nullptr;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::Node::~Node() {
     delete right;
     delete left;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::Node::Node(Node& n) {
     key = n.key;
-    element = n.element;
+    value = n.value;
         
     left = n.left;
     right = n.right;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::BSTLEAF() {
     root = nullptr;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::~BSTLEAF() {
     delete root;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::BSTLEAF(BSTLEAF<K,V,cf,ef>& BSTLEAF) {
     root = new Node(BSTLEAF.root);
 
@@ -82,13 +82,13 @@ BSTLEAF<K,V,cf,ef>::BSTLEAF(BSTLEAF<K,V,cf,ef>& BSTLEAF) {
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>::BSTLEAF(BSTLEAF<K,V,cf,ef>&& BSTLEAF) {
     root = BSTLEAF.root;
     BSTLEAF.root = nullptr;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>& BSTLEAF<K,V,cf,ef>::operator=(BSTLEAF<K,V,cf,ef>& BSTLEAF) {
     root = Node(BSTLEAF.root);
     
@@ -100,14 +100,14 @@ BSTLEAF<K,V,cf,ef>& BSTLEAF<K,V,cf,ef>::operator=(BSTLEAF<K,V,cf,ef>& BSTLEAF) {
     return *this;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTLEAF<K,V,cf,ef>& BSTLEAF<K,V,cf,ef>::operator=(BSTLEAF<K,V,cf,ef>&& BSTLEAF) {
     root = BSTLEAF.root;
     BSTLEAF.root = nullptr;
     return *this;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 void BSTLEAF<K,V,cf,ef>::insert( V value, K key ) {
     if(!root) {
         root = new Node(value, key);
@@ -117,11 +117,10 @@ void BSTLEAF<K,V,cf,ef>::insert( V value, K key ) {
     Node* temp = root;
 
     while(true) {
-        
-        if(ef(root->key, key)) {
-            temp->element = value;
+        if(ef(temp->key, key)) {
+            temp->value = value;
             return;
-        } else if(cf(root->key, key)) {
+        } else if(cf(temp->key, key)) {
             if(temp->right) {
                 temp = temp->right;
             } else {
@@ -140,7 +139,7 @@ void BSTLEAF<K,V,cf,ef>::insert( V value, K key ) {
 
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 void BSTLEAF<K,V,cf,ef>::remove(K key) {
     if(!root) 
          throw std::runtime_error("BSTLEAF: Item not in Map!");
@@ -163,7 +162,7 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
 
     if(!temp->right && !temp->left) {
         if(temp_parent != temp) {
-            if(cf(temp_parent->key, key)
+            if(cf(temp_parent->key, key))
                 temp_parent->right = nullptr;
             else
                 temp_parent->left = nullptr;
@@ -172,7 +171,7 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
         }
         delete temp;
     } else {
-        Node* new_temp = find_next_biggest(temp)
+        Node* new_temp = find_next_biggest(temp);
         temp->key = new_temp->key;
         temp->value = new_temp->value;
         new_temp->left = new_temp->right = nullptr;
@@ -180,25 +179,25 @@ void BSTLEAF<K,V,cf,ef>::remove(K key) {
     }
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 V& BSTLEAF<K,V,cf,ef>::lookup(K key) {
     if(!root) {
-        throw std::runtime_error("BSTLEAF: Item not in Map");
+        throw std::runtime_error("BSTLEAF: Item not in Map. Root DNE!");
     }
     
     Node* temp = root;
 
     while(!ef(key,temp->key)) {
-        if(!temp)
-            throw std::runtime_error("BSTLEAF: Item not in Map");
-    
-        if(cf(root->key,key))
-            temp = temp->left;
-        else
+        if(cf(temp->key,key))
             temp = temp->right;
+        else
+            temp = temp->left;
+
+        if(!temp)
+            throw std::runtime_error("BSTLEAF: Item not in Map. Cannot lookup!");
     }
 
-    return temp->element;
+    return temp->value;
 };
 
 //Private functions!!!!
@@ -208,7 +207,7 @@ V& BSTLEAF<K,V,cf,ef>::lookup(K key) {
 //The Node that is returned to not the node intended to be deleted. What is returned is the 
 //Node hold the vaules which will replace the vaules of the node to be deleted.
 //The root node must have children otherwise this code would not be run. (Check remove function)
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 typename BSTLEAF<K,V,cf,ef>::Node* BSTLEAF<K,V,cf,ef>::find_next_biggest(Node* root) {
     if(!root) 
         return nullptr;
@@ -231,7 +230,7 @@ typename BSTLEAF<K,V,cf,ef>::Node* BSTLEAF<K,V,cf,ef>::find_next_biggest(Node* r
     return temp;
 };
 
-template<typename K, typename V,  bool (*cf)(V,V),  bool (*ef)(V,V)>
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 typename BSTLEAF<K,V,cf,ef>::Node* BSTLEAF<K,V,cf,ef>::do_copy(Node* root) {
     if(!root)
         return nullptr;
