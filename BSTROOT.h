@@ -33,8 +33,11 @@ private:
     };
 
     Node* root;
-    Node* find_next_biggest(Node* root);
+
     Node* do_copy(Node* root);
+    Node* find_pred(Node* n);
+    Node* do_remove(Node* n, K key);
+
     Node* insert_at_root(Node* root, V value, K key);
     Node* r_rotation(Node* root);
     Node* l_rotation(Node* root);
@@ -77,7 +80,7 @@ BSTROOT<K,V,cf,ef>::~BSTROOT() {
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTROOT<K,V,cf,ef>::BSTROOT(BSTROOT<K,V,cf,ef>& BSTROOT) {
-    root = new Node(BSTROOT.root);
+    root = new Node(*BSTROOT.root);
 
     if(root) {
         root->left = do_copy(BSTROOT.root->left);
@@ -93,7 +96,7 @@ BSTROOT<K,V,cf,ef>::BSTROOT(BSTROOT<K,V,cf,ef>&& BSTROOT) {
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 BSTROOT<K,V,cf,ef>& BSTROOT<K,V,cf,ef>::operator=(BSTROOT<K,V,cf,ef>& BSTROOT) {
-    root = Node(BSTROOT.root);
+    root = new Node(*BSTROOT.root);
     
     if(BSTROOT.root) {
         root->left = do_copy(BSTROOT.root->left);
@@ -117,49 +120,13 @@ void BSTROOT<K,V,cf,ef>::insert( V value, K key ) {
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 void BSTROOT<K,V,cf,ef>::remove(K key) {
-    if(!root) 
-         throw std::runtime_error("BSTLEAF: Item not in Map!");
-
-    Node* temp = root;
-    Node* temp_parent = root;
-
-    while(!ef(key,temp->key)) {
-        if(!temp)
-            throw std::runtime_error("BSTLEAF: Item not in Map");
-        
-        if(cf(temp->key,key)) {
-            temp_parent = temp;
-            temp = temp->right;
-        } else { 
-            temp_parent = temp;
-            temp = temp->left;
-        }
-    }
-
-    if(!temp->right && !temp->left) {
-        if(temp_parent != temp) {
-            if(cf(temp_parent->key, key))
-                temp_parent->right = nullptr;
-            else
-                temp_parent->left = nullptr;
-        } else {
-            root = nullptr;
-        }
-        delete temp;
-    } else {
-        Node* new_temp = find_next_biggest(temp);
-        temp->key = new_temp->key;
-        temp->value = new_temp->value;
-        new_temp->left = new_temp->right = nullptr;
-        delete new_temp;
-    }
-    
+    root = do_remove(root, key);  
 };
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
 V& BSTROOT<K,V,cf,ef>::lookup(K key) {
     if(!root) {
-        throw std::runtime_error("BSTLEAF: Item not in Map");
+        throw std::runtime_error("BSTROOT: Item not in Map");
     }
     
     Node* temp = root;
@@ -171,7 +138,7 @@ V& BSTROOT<K,V,cf,ef>::lookup(K key) {
             temp = temp->left;
 
         if(!temp)
-            throw std::runtime_error("BSTLEAF: Item not in Map");
+            throw std::runtime_error("BSTROOT: Item not in Map");
     }
 
     return temp->value;
@@ -180,26 +147,58 @@ V& BSTROOT<K,V,cf,ef>::lookup(K key) {
 //private functions
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
-typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::find_next_biggest(Node* root) {
-    if(!root) 
-        return nullptr;
-
-    Node* temp = root->right;
-    Node* temp_parent = root;
-
-    if(!temp) {
-        temp = temp_parent->left;
-        temp_parent->left = temp_parent->left->left;
-        return temp;
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::do_remove(Node* n, K key) {
+    Node* temp;
+    if(!n) {
+        throw std::runtime_error("BSTROOT: Tried to remove item not in Map!");
     }
-
-    while(temp->left) {
-        temp_parent = temp;
-        temp = temp->left;
+    if(ef(n->key, key)) {
+        if(!n->right && !n->left) {
+            n->right = n->left = nullptr;
+            delete n;
+            return nullptr;
+        }
+        else if(!n->right || !n->left) {
+            if(!n->right) {
+                temp = n->left;
+                n->right = n->left = nullptr;
+                delete n;
+                return temp;
+            }
+            else {
+                temp = n->right;
+                n->right = n->left = nullptr;
+                delete n;
+                return temp;
+            }
+        }
+        else {
+            temp = find_pred(n->left);
+            n->value = temp->value;
+            n->key = temp->key;
+            n->left = do_remove(n->left, n->key);
+            return n;
+        }
     }
+    else if(cf(n->key, key)) {
+        n->right = do_remove(n->right, key);
+    }
+    else if(cf(key, n->key)) {
+        n->left = do_remove(n->left, key);
+    }
+    return n;
+};
 
-    temp_parent->left = temp->right;
-    return temp;
+template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
+typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::find_pred(Node* n) {
+    static Node* pred;
+    if(!n) {
+        return pred;
+    }
+    else {
+        pred = n;
+        return find_pred(n->right);
+    }
 };
 
 template<typename K, typename V,  bool (*cf)(K,K),  bool (*ef)(K,K)>
@@ -207,7 +206,7 @@ typename BSTROOT<K,V,cf,ef>::Node* BSTROOT<K,V,cf,ef>::do_copy(Node* root) {
     if(!root)
         return nullptr;
     
-    Node* new_node = Node(root);
+    Node* new_node = new Node(*root);
     new_node->left = do_copy(root->left);
     new_node->right = do_copy(root->right);
 
