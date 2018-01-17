@@ -1,2 +1,2 @@
 language: cpp
-script: cd ./test && g++ -std=c++11 -o test.out && ./test.out
+script: cd ./testers && g++ -std=c++11 -o test.out && ./test.out
